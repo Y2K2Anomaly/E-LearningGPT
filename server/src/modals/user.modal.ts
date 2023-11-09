@@ -1,10 +1,12 @@
-import mongoose, {Document, Model, Schema} from "mongoose";
+require('dotenv').config();
+import mongoose, { Document, Model, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 const emailRegexPattern: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 
-export interface IUser extends Document{
+export interface IUser extends Document {
     name: string;
     email: string;
     password: string;
@@ -14,8 +16,10 @@ export interface IUser extends Document{
     },
     role: string;
     isVerified: boolean;
-    courses: Array<{courseId: string}>;
-
+    courses: Array<{ courseId: string }>;
+    SignAccessToken: () => string;
+    SignRefreshToken: () => string;
+    comparePassword: (password: string) => boolean;
 }
 
 const userSchema: Schema<IUser> = new mongoose.Schema({
@@ -27,7 +31,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
         type: String,
         required: [true, "Please enter your email"],
         validate: {
-            validator: function(value: string){
+            validator: function (value: string) {
                 return emailRegexPattern.test(value);
             },
             message: "please enter a valid email",
@@ -58,21 +62,31 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
 
         }
     ]
-},{timestamps: true});
+}, { timestamps: true });
 
 // Hash Password Before Saving
-userSchema.pre<IUser>('save', async function(next){
-    if(!this.isModified('password')){
+userSchema.pre<IUser>('save', async function (next) {
+    if (!this.isModified('password')) {
         next();
     }
     this.password = await bcrypt.hash(this.password, 10);
     next();
 });
 
+// sign access token
+userSchema.methods.SignAccessToken = function () {
+    return jwt.sign({ id: this._id }, process.env.ACCESS_TOKEN || '');
+};
+
+// sign refresh token
+userSchema.methods.SignRefreshToken = function () {
+    return jwt.sign({ id: this._id }, process.env.REFRESH_TOKEN || '');
+};
+
 // compare password
-userSchema.methods.comparePassword = async function(enteredPassword: string): Promise<boolean> {
+userSchema.methods.comparePassword = async function (enteredPassword: string): Promise<boolean> {
     return await bcrypt.compare(enteredPassword, this.password);
-}
+};
 
 const userModal: Model<IUser> = mongoose.model("User", userSchema);
 
