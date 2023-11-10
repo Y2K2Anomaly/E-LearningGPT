@@ -8,6 +8,7 @@ import ejs from "ejs";
 import path from "path";
 import sendMail from "../utils/sendMail";
 import { sendToken } from "../utils/jwt";
+import { redis } from "../utils/redis";
 
 // register user
 interface IRegistrationBody {
@@ -119,7 +120,7 @@ export const activateUser = CatchAsyncError(async (req: Request, res: Response, 
     } catch (error: any) {
         return next(new ErrorHandler(error.message, 500));
     }
-})
+});
 
 // Login User
 interface ILoginRequest {
@@ -158,12 +159,14 @@ export const logoutUser = CatchAsyncError(async (req: Request, res: Response, ne
     try {
         res.cookie("access_token", "", { maxAge: 1 });
         res.cookie("refresh_token", "", { maxAge: 1 });
+        const userId = req.user?._id || "";
 
+        redis.del(userId);
         res.status(200).json({
             success: true,
-            message: "Logged out successfully"
+            message: "Logged out successfully",
         })
     } catch (error: any) {
-        return next(new ErrorHandler(error.message, 400));
+        return next(new ErrorHandler(error.message, 500));
     }
 })
