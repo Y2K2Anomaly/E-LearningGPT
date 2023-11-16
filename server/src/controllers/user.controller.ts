@@ -250,3 +250,17 @@ interface IUpdateUserInfo {
     email?: string;
 }
 
+export const updateUserInfo = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { name, email } = req.body as IUpdateUserInfo;
+        const userId = req.user?._id;
+        const user = await userModal.findById(userId);
+
+        if (email && user) {
+            const isEmailExist = await userModal.findOne({ email });
+        }
+
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+})
