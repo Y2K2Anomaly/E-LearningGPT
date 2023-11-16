@@ -1,12 +1,17 @@
 import userModal from "../modals/user.modal";
 import { Response } from "express";
+import { redis } from "../utils/redis";
 
 // get user by id
 export const getUserById = async (id: string, res: Response) => {
-    const user = await userModal.findById(id);
+    const userJson = await redis.get(id);
 
-    res.status(201).json({
-        success: true,
-        user,
-    })
-}
+    if (userJson) {
+        const user = JSON.parse(userJson);
+        res.status(201).json({
+            success: true,
+            user,
+        });
+    }
+
+};

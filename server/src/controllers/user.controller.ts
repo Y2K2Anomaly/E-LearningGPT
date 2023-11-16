@@ -198,6 +198,8 @@ export const updateAccessToken = CatchAsyncError(async (req: Request, res: Respo
             expiresIn: "3d"
         });
 
+        req.user = user;
+
         res.cookie("access_token", accessToken, accessTokenOptions);
         res.cookie("refresh_token", refreshToken, refreshTokenOptions);
 
@@ -258,9 +260,22 @@ export const updateUserInfo = CatchAsyncError(async (req: Request, res: Response
 
         if (email && user) {
             const isEmailExist = await userModal.findOne({ email });
+
+            user.email = email;
+        }
+        if (name && user) {
+            user.name = name;
         }
 
+        await user?.save();
+
+        await redis.set(userId, JSON.stringify(user));
+
+        res.status(201).json({
+            success: true,
+            user,
+        });
     } catch (error: any) {
         return next(new ErrorHandler(error.message, 500));
     }
-})
+});
