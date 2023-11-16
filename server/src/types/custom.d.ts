@@ -1,4 +1,4 @@
-import { Request } from "express";
+import { Request, Response } from "express";
 import { IUser } from "../modals/user.modal";
 
 declare global {
