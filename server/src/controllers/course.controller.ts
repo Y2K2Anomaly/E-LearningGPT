@@ -5,6 +5,7 @@ import cloudinary from "cloudinary";
 import { createCourse } from "../services/course.service";
 import CourseModal from "../modals/course.modal";
 import { redis } from "../utils/redis";
+import jwt, { JwtPayload } from "jsonwebtoken"
 
 
 // upload course
@@ -124,5 +125,29 @@ export const getAllCourses = CatchAsyncError(async (req: Request, res: Response,
         }
     } catch (error: any) {
         return next(new ErrorHandler(error.message, 500));
+    }
+});
+
+// get course content -- only for valid user
+export const getCourseByUser = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userCourseList = req.user?.courses;
+        const courseId = req.params.id;
+
+        const courseExists = userCourseList?.find((course: any) => course._id.toString() === courseId);
+
+        if (!courseExists) {
+            return next(new ErrorHandler("You're not eligible to access this course", 400));
+        }
+
+        const course = await CourseModal.findById(courseId);
+        const content = course?.courseData;
+
+        res.status(200).json({
+            success: true,
+            content,
+        });
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 500))
     }
 });
