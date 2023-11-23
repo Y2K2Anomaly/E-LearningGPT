@@ -11,3 +11,13 @@ export const newOrder = CatchAsyncError(async (data: any, res: Response, next: N
         order,
     })
 })
+
+// Get All users --- only for admin
+export const getAllOrdersService = async (res: Response) => {
+    const orders = await OrderModal.find().sort({ createdAt: -1 });
+
+    return res.status(200).json({
+        success: true,
+        orders,
+    });
+};
