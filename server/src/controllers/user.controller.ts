@@ -11,6 +11,7 @@ import { accessTokenOptions, refreshTokenOptions, sendToken } from "../utils/jwt
 import { redis } from "../utils/redis";
 import { getAllUsersService, getUserById, updateUserRoleService } from "../services/user.service";
 import cloudinary from "cloudinary";
+import { addQuestion } from "./course.controller";
 
 // register user
 interface IRegistrationBody {
@@ -393,5 +394,29 @@ export const updateUserRole = CatchAsyncError(async (req: Request, res: Response
         updateUserRoleService(res, id, role);
     } catch (error: any) {
         return next(new ErrorHandler(error.message, 500))
+    }
+});
+
+// Delete User  --- only for admin
+export const deleteUser = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params;
+
+        const user = await userModal.findById(id);
+
+        if (!user) {
+            return next(new ErrorHandler("User not found", 404));
+        }
+
+        await user.deleteOne({ id });
+
+        await redis.del(id);
+
+        return res.status(200).json({
+            success: true,
+            message: "User deleted successfully",
+        });
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 400));
     }
 });
