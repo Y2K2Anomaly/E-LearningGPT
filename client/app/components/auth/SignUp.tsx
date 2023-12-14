@@ -33,10 +33,10 @@ const SignUp: FC<Props> = ({ setRoute }) => {
         if (error) {
             if ("data" in error) {
                 const errorData = error as any;
-                toast.error(errorData.data.message);
+                toast.error(errorData.data?.message);
             }
         }
-    }, [isSuccess, error]);
+    }, [isSuccess, error, data?.message, setRoute]);
 
     const formik = useFormik({
         initialValues: { name: "", email: "", password: "" },
@@ -149,7 +149,7 @@ const SignUp: FC<Props> = ({ setRoute }) => {
                     Already have an account?{" "}
                     <span
                         className="text-[#2190ff] pl-1 cursor-pointer"
-                        onClick={() => setRoute("Sign-Up")}
+                        onClick={() => setRoute("Login")}
                     >
                         Sign in
                     </span>
